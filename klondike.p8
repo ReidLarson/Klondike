@@ -4,21 +4,51 @@ __lua__
 deck={}
 
 function _init()
-
+	createdeck()	
+	shuffle()
+	for card in all(deck) do
+	 print(card.suit.." "..card.rank)
+	end
 end
 
 function _update()
 end
 
 function _draw()
-	rectfill(0,0,127,127,5)
-	circfill(x,y,7,14)
+ 
+end
+
+--createcard
+function createcard(suit,rank)
+ local card = {}
+ card.suit = suit
+ card.rank = rank
+ card.isfaceup = false
+ card.loc = "deck"
+ return card
 end
 
 --generates a deck of 52 cards
 function createdeck()
-	for i=1,52 do
-		deck[#deck+1]={i}
+	for i=1,4 do
+		for j=1,13 do
+			add(deck,createcard(i,j))
+		end
+	end
+end
+
+--shuffle deck
+function shuffle()
+ local shuffled = {}
+ --print(rnd(#deck+1))
+ while(#deck > 0) do
+  local card = deck[flr(rnd(#deck+1))]
+  add(shuffled,card)
+  del(deck,card)
+  shuffled[#shuffled].isfaceup = false
+  shuffled[#shuffled].loc = "deck"
+ end
+ deck = shuffled
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
