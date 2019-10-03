@@ -1,11 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
-deck={}
-
 function _init()
-	createdeck()	
-	shuffle()
+ newgame()
 end
 
 function _update()
@@ -15,11 +12,28 @@ function _draw()
  cls()
  rectfill(0,0,128,128,5)
  for i=1,7 do
-  local isfaceup = flr(rnd(2)) > 0
-  --deck[i].isfaceup = isfaceup
-  deck[i].isfaceup = true
-  rendercard(deck[i],(i-1)*16,2)
+  stock[i].isfaceup = true
+  rendercard(stock[i],(i-1)*16,2)
  end
+end
+
+function newgame()
+	stock={}
+	waste={}
+	tableau1={}
+	tableau2={}
+	tableau3={}
+	tableau4={}
+	tableau5={}
+	tableau6={}
+	tableau7={}
+	foundation1={}
+	foundation2={}
+	foundation3={}
+	foundation4={}
+	
+	stock=createdeck(stock)
+	stock=shuffle(stock)
 end
 
 --createcard
@@ -28,38 +42,36 @@ function createcard(suit,rank)
  card.suit = suit
  card.rank = rank
  card.isfaceup = false
- card.loc = "deck"
  return card
 end
 
 --generates a deck of 52 cards
-function createdeck()
+function createdeck(deck)
 	for i=1,4 do
 		for j=1,13 do
 			add(deck,createcard(i,j))
 		end
 	end
+	return deck
 end
 
 --shuffle deck
-function shuffle()
+function shuffle(deck)
  local shuffled = {}
- --print(rnd(#deck+1))
  while(#deck > 0) do
-  local card = deck[flr(rnd(#deck+1))]
+  local card = deck[flr(rnd(#deck))+1]
   add(shuffled,card)
   del(deck,card)
   shuffled[#shuffled].isfaceup = false
-  shuffled[#shuffled].loc = "deck"
  end
- deck = shuffled
+ return shuffled
 end
 
 function rendercard(card,x,y)
 	palt(0,false)
 	palt(15,true)
 	if card.isfaceup then
-	 --card back
+	 --card background
 	 spr(14,x,y)
 	 spr(15,x+8,y)
 	 spr(30,x,y+8)
@@ -67,13 +79,12 @@ function rendercard(card,x,y)
 	 
 	 spr(card.suit+20,x+5,y+8)
 	 spr(card.rank,x+1,y+1)
-	else
+	else --just card back
 	 spr(46,x,y)
 	 spr(47,x+8,y)
 	 spr(62,x,y+8)
 	 spr(63,x+8,y+8)
 	end
- 
  palt()
 end
 __gfx__
