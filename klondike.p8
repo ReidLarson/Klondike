@@ -14,6 +14,7 @@ function _init()
 	hoveredyindex=1
 	
  newgame()
+ deselectcards()
  menuitem(1,"new game",newgame)
 end
 
@@ -34,6 +35,10 @@ function _draw()
  drawstock()
  drawwaste()
  drawfoundations()
+ 
+ --debug
+ print(hoveredxindex,2,56,0)
+ print(hoveredyindex,2,50,0)
 end
 
 function newgame()
@@ -81,7 +86,6 @@ function dealhand()
   	  local card=stock.cards[#stock.cards]
   	  if i==rsrv.deallimit then
   	   add(tableaus[j].cards,card)
-  	   tableaus[j].cards[#tableaus[j].cards].isfaceup=true
   	  elseif i<rsrv.deallimit then
   	   add(reserves[j].cards,card)
   	  end
@@ -137,6 +141,10 @@ function selectedtick()
 end
 
 function cardsupdate()
+ if hoveredarea~="reserves" then
+  deselectcards()
+ end
+
  --stock
  for i=1,#stock.cards do
   stock.cards[i].ishovered=false
@@ -151,13 +159,9 @@ function cardsupdate()
  for i=1,#waste.cards do
   waste.cards[i].isfaceup=true
   waste.cards[i].ishovered=false
-  waste.cards[i].isfaceup=false
   if i==#waste.cards then
    if hoveredarea=="waste" then
     waste.cards[i].ishovered=true
-   end
-   if selectedarea=="waste" then
-   	waste.cards[i].isselected=true
    end
   end
  end
@@ -167,12 +171,46 @@ function cardsupdate()
   for j=1,#foundations[i].cards do
    foundations[i].cards[j].isfaceup=true
    foundations[i].cards[j].ishovered=false
-   foundations[i].cards[j].isselected=false
   end
  end
  
- --reserves and tableaus are
- --updated in the game logic
+ --reserves
+ for i=1,#reserves do
+  for j=1,#reserves[i].cards do
+   reserves[i].cards[j].isfaceup=false
+   
+   --todo make this work
+   reserves[i].cards[j].ishovered=i==hoveredxindex and #tableaus[i].cards==0 and j==#reserves[i].cards
+  end
+ end
+ 
+ --tableaus
+ for i=1,#tableaus do
+  for j=1,#tableaus[i].cards do
+   tableaus[i].cards[j].isfaceup=true
+   tableaus[i].cards[j].ishovered=j>=hoveredyindex and hoveredxindex==i and hoveredarea=="reserves"
+  end
+ end
+end
+
+function selectcards()
+ if hoveredarea=="reserves" then
+  selectedxindex=hoveredxindex
+  selectedyindex=hoveredyindex
+  for i=selectedyindex,#tableaus[selectedxindex].cards do
+   tableaus[selectedxindex].cards[i].isselected=true
+  end
+ end
+end
+
+function deselectcards()
+ selectedxindex=nil
+ selectedyindex=nil
+ for i=1,#tableaus do
+  for j=1,#tableaus[i].cards do
+   tableaus[i].cards[j].isselected=false
+  end
+ end
 end
 -->8
 --draw
@@ -216,21 +254,32 @@ function drawcells()
   reflectcard(sprindex,col.x,foundations.y)
  end
  
- if hoveredarea=="reserves" then
-  pal(sprcolor,hoverc)
- else
-  pal(sprcolor,standardc)
- end
- for col in all(reserves) do
+ --reserves
+ for i=1,#reserves do
+  local col=reserves[i]
+  if hoveredarea=="reserves" and i==hoveredxindex then
+   pal(sprcolor,hoverc)
+  else
+   pal(sprcolor,standardc)
+  end
  	reflectcard(sprindex,col.x,col.y)
  end
  pal()
 end
 
-function drawcard(card,x,y)
+function drawcard(card,x,y,isshadowed)
 	palt(0,false)
 	palt(15,true)
 	if card.isfaceup then
+		if isshadowed then
+	  pal(14,6)
+	  spr(15,x,y-1)
+	  spr(15,x+8,y-1,1,1,true)
+	  pal()
+	  palt(0,false)
+	  palt(15,true)
+	 end
+	
 	 --card background
 	 reflectcard(14,x,y)
 	 
@@ -265,7 +314,8 @@ function drawtableaus()
  for i=1,#tableaus do
   local tbl=tableaus[i]
   for j=1,#tbl.cards do
-   drawcard(tbl.cards[j],tbl.x,(#reserves[i].cards*2)+tbl.y+(j-1)*12)
+   local isshadowed=j>1
+   drawcard(tbl.cards[j],tbl.x,(#reserves[i].cards*2)+tbl.y+(j-1)*7,isshadowed)
   end
  end
 end
@@ -278,7 +328,7 @@ end
 
 function drawwaste()
  --todo make sure this works
- for card in all(waste) do
+ for card in all(waste.cards) do
   drawcard(card,waste.x,waste.y)
  end
 end
@@ -299,6 +349,8 @@ function changearea()
 	 	hoveredarea="waste"
 	 elseif btnp(⬇️) then
    enterreserves()
+  elseif btnp(🅾️) then
+   flipstock()
 	 end
 	elseif hoveredarea=="waste" then
 	 if btnp(⬅️) or btnp(➡️) then
@@ -310,20 +362,22 @@ function changearea()
 	 if btnp(⬆️) then
 	  if #tableaus[hoveredxindex].cards==0 or hoveredyindex==1 then
 	   exitreserve(hoveredxindex)
-	  	hoveredarea="waste"
+	  	hoveredarea="stock"
 	  else
-	   tableaus[hoveredxindex].cards[hoveredyindex].ishovered=false
+	   --tableaus[hoveredxindex].cards[hoveredyindex].ishovered=false
 	   hoveredyindex-=1
-	   tableaus[hoveredxindex].cards[hoveredyindex].ishovered=true
+	   --tableaus[hoveredxindex].cards[hoveredyindex].ishovered=true
 	  end
 	 elseif btnp(⬇️) then
 	  local cardcount=#tableaus[hoveredxindex].cards
 	  if cardcount>0 and cardcount~=hoveredyindex then
-	   tableaus[hoveredxindex].cards[hoveredyindex].ishovered=false
+	   --tableaus[hoveredxindex].cards[hoveredyindex].ishovered=false
 	   hoveredyindex+=1
-	   tableaus[hoveredxindex].cards[hoveredyindex].ishovered=true
+	   --tableaus[hoveredxindex].cards[hoveredyindex].ishovered=true
 	  end
+	  deselectcards()
 	 elseif btnp(➡️) or btnp(⬅️) then
+	  --todo while selection~=nil, check if new xindex has a tableau, skip if it doesn't
 	  if btnp(➡️) then
 	  	newxindex=hoveredxindex+1
 	  	if newxindex>#tableaus then newxindex=1 end
@@ -334,32 +388,89 @@ function changearea()
 	  exitreserve(hoveredxindex)
 	  hoveredxindex=newxindex
 	  enterreserves()
+	 elseif btnp(🅾️) then
+	  local tableaucount=#tableaus[hoveredxindex].cards
+	  local reservecount=#reserves[hoveredxindex].cards
+	  if tableaucount>0 or (reservecount==0 and tableaucount==0) then
+		  if selectedxindex==hoveredxindex then
+		   deselectcards()
+		  elseif selectedxindex==nil then
+		   selectcards()
+		  else
+		   checkmovetableau()
+		  end
+		 else
+		  flipreserve()
+		 end
 	 end
 	end
 end
 
-function buttonpress()
- if btnp(⬅️) or btnp(➡️) or btnp(⬆️) or btnp(⬇️) then
-  
+function flipstock()
+ local stockcount=#stock.cards
+ if stockcount>0 then
+	 local card=stock.cards[stockcount]
+	 debugcard=card
+	 add(waste.cards,card)
+	 del(stock.cards,card)
+	else
+	 for i=#waste.cards,1,-1 do
+	  add(stock.cards,waste.cards[i])
+	 end
+	 while #waste.cards>0 do
+	  del(waste.cards,waste.cards[1])
+	 end
  end
 end
 
-function deselectall()
- for i=1,#tableaus do
-  for j=1,#tableaus[i].cards do
-   tableaus[i].cards[j].isselected=false
-  end
+function flipreserve()
+ local reserve=reserves[hoveredxindex]
+ local card=reserve.cards[#reserve.cards]
+ add(tableaus[hoveredxindex].cards,card)
+ del(reserves[hoveredxindex].cards,card)
+ hoveredyindex=#tableaus[hoveredxindex].cards
+end
+
+function checkmovetableau()
+ --todo code for handling moving to empty reserve
+ --todo code for handling moving from waste to tableau or empty reserve
+ if hoveredarea=="reserves" and selectedxindex~=nil and selectedxindex~=hoveredxindex then
+  if selectedxindex~=nil and #tableaus[hoveredxindex].cards>0 then
+		 local selectedcard=tableaus[selectedxindex].cards[selectedyindex]
+		 local hoveredcard=tableaus[hoveredxindex].cards[#tableaus[hoveredxindex].cards]
+		 if hoveredcard~=nil and selectedcard.suit%2~=hoveredcard.suit%2 and selectedcard.rank==hoveredcard.rank-1 then
+		  movetableau()
+		 end
+		elseif #tableaus[hoveredxindex].cards==0 and #reserves[hoveredxindex].cards==0 then
+		 --move king to empty cell
+			movetableau()
+	 else
+	  sfx(0)
+	  --todo play did not happen sfx?
+	 end
+ end 
+end
+
+function movetableau()
+ for i=selectedyindex,#tableaus[selectedxindex].cards do
+	 add(tableaus[hoveredxindex].cards,tableaus[selectedxindex].cards[i])
+	end
+ local i=selectedyindex
+ while i<=#tableaus[selectedxindex].cards do
+  del(tableaus[selectedxindex].cards,tableaus[selectedxindex].cards[i])
  end
+ deselectcards()
+ --todo play sfx?
 end
 
 function enterreserves()
  hoveredarea="reserves"
  local x=hoveredxindex
  if #tableaus[x].cards>0 then
-  hoveredyindex=#tableaus[x].cards
-  tableaus[x].cards[hoveredyindex].ishovered=true
- else
-  hoveredyindex=#reserves[i].cards
+  hoveredyindex=1
+  --tableaus[x].cards[hoveredyindex].ishovered=true
+ elseif #reserves[x].cards>0 then
+  hoveredyindex=#reserves[x].cards
   reserves[x].cards[hoveredyindex].ishovered=true
  end
 end
@@ -367,11 +478,9 @@ end
 function exitreserve(xindex)
  for i=1,#reserves[xindex].cards do
   reserves[xindex].cards[i].ishovered=false
-  reserves[xindex].cards[i].isselected=false
  end
  for i=1,#tableaus[xindex].cards do
-  tableaus[xindex].cards[i].ishovered=false
-  tableaus[xindex].cards[i].isselected=false
+  --tableaus[xindex].cards[i].ishovered=false
  end
 end
 __gfx__
@@ -529,3 +638,5 @@ __label__
 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 
+__sfx__
+00010000180000c000240002a050000000000029050000002a0502a0502a0502a0502a0502a05029050290502905029050290502a0502b0502b0502b0502b0502b05000000000000000000000000000000000000
