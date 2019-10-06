@@ -37,8 +37,14 @@ function _draw()
  drawfoundations()
  
  --debug
- print(hoveredxindex,2,56,0)
- print(hoveredyindex,2,50,0)
+ print(hoveredxindex,2,50,0)
+ print(hoveredyindex,2,56,0)
+ print(#foundations[1].cards,2,62,0)
+ print(#foundations[2].cards,2,68,0)
+ print(#foundations[3].cards,2,74,0)
+ print(#foundations[4].cards,2,80,0)
+ print(reserverank,2,86,0)
+ print(reservecount,2,92,0)
 end
 
 function newgame()
@@ -399,11 +405,43 @@ function changearea()
 		  else
 		   checkmovetableau()
 		  end
-		 else
+		 elseif selectedxindex==nil then
 		  flipreserve()
+		 end
+		elseif btnp(❎) then
+		 if selectedxindex~=nil then
+		  deselectcards()
+		 else
+		 	checkmovetofoundation()
 		 end
 	 end
 	end
+end
+
+function checkmovetofoundation()
+ local tableau=tableaus[hoveredxindex]
+ local cardcount=#tableau.cards
+ if cardcount>0 then
+  local cardsuit = tableau.cards[cardcount].suit
+  local cardrank = tableau.cards[cardcount].rank
+  local foundation = foundations[cardsuit]
+  local foundationcount = #foundation.cards
+  --todo change this to a local variable
+  local foundationrank=0
+  if foundationcount>0 then
+   foundationrank=foundation.cards[foundationcount].rank
+  end
+  if cardrank==foundationrank+1 then
+   sfx(0)
+   movetofoundation()
+  end
+ end
+end
+
+function movetofoundation()
+ local card=tableaus[hoveredxindex].cards[#tableaus[hoveredxindex].cards]
+ add(foundations[card.suit].cards,card)
+ del(tableaus[hoveredxindex].cards,card)
 end
 
 function flipstock()
@@ -428,7 +466,7 @@ function flipreserve()
  local card=reserve.cards[#reserve.cards]
  add(tableaus[hoveredxindex].cards,card)
  del(reserves[hoveredxindex].cards,card)
- hoveredyindex=#tableaus[hoveredxindex].cards
+ hoveredyindex=1
 end
 
 function checkmovetableau()
