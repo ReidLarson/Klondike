@@ -507,11 +507,6 @@ function checkmovetofoundation(iswaste)
  end
 end
 
---todo movewastetotableau
-function movewastetotableau()
-
-end
-
 function movetofoundation(iswaste)
  local card=nil
  if iswaste then
@@ -585,7 +580,7 @@ function checkmovetableau()
     movetableau()
    elseif selectedarea=="waste" then
     movewastetotableau()
-   end  
+   end
   else
    --don't do the move
    --todo bad sfx
@@ -606,6 +601,8 @@ function movewastetotableau()
  deselectcards()
  
  --todo for some reason can't move back up to stock after doing this without switching rerserves first
+ --attempt to fix above bug
+ hoveredyindex=1
 end
 
 function movetableau()
