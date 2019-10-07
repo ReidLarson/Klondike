@@ -142,9 +142,9 @@ function selectedtick()
 end
 
 function cardsupdate()
- if hoveredarea~="reserves" and hoveredarea~="waste" then
-  deselectcards()
- end
+-- if hoveredarea~="reserves" and hoveredarea~="waste" then
+--  deselectcards()
+-- end
 
  --stock
  for i=1,#stock.cards do
@@ -179,7 +179,7 @@ function cardsupdate()
  for i=1,#reserves do
   for j=1,#reserves[i].cards do
    reserves[i].cards[j].isfaceup=false
-   reserves[i].cards[j].ishovered=i==hoveredxindex and #tableaus[i].cards==0 and j==#reserves[i].cards
+   reserves[i].cards[j].ishovered=i==hoveredxindex and #tableaus[i].cards==0 and j==#reserves[i].cards and hoveredarea=="reserves"
   end
  end
  
@@ -296,7 +296,7 @@ function drawcard(card,x,y,isshadowed)
 	 reflectcard(14,x,y)
 	 
 	 spr(21+2*(card.suit-1),x,y+1,2,2)
-	 spr(card.rank,x+1,y+1)
+  spr(card.rank,x+1,y+1)
 	else --just card back
 	 spr(46,x,y,2,1)
 	 spr(46,x,y+8,2,1,true,true)
@@ -369,6 +369,7 @@ function stock_input()
  elseif btnp(⬇️) then
   enterreserves()
  elseif btnp(🅾️) then
+  deselectcards()
   flipstock()
  end
 end
@@ -484,9 +485,11 @@ function checkmovetofoundation(iswaste)
  local continuecheck=false
  if iswaste then
   local wastecount=#waste.cards
-  cardsuit=waste.cards[wastecount].suit
-  cardrank=waste.cards[wastecount].rank
-  continuecheck=true
+  if wastecount>0 then
+	  cardsuit=waste.cards[wastecount].suit
+	  cardrank=waste.cards[wastecount].rank
+	  continuecheck=true
+  end
  else
 	 local tableau=tableaus[hoveredxindex]
 	 local cardcount=#tableau.cards
@@ -597,6 +600,7 @@ function checkmovetableau()
 end
 
 function comparetableaucards(highcard,lowcard)
+ -- this has had a bug where lowcard is a nil value. could check for it here but that wouldn't fix the source of the bug.
  return highcard.suit%2~=lowcard.suit%2 and highcard.rank-1==lowcard.rank
 end
 
