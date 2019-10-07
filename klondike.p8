@@ -8,11 +8,7 @@ function _init()
 	tick=0
 	hoverc=9
 	selectc=14
-	selectedarea=nil
 	ticklimit=8
-	hoveredarea="stock"
-	hoveredxindex=1
-	hoveredyindex=1
 	
  newgame()
  deselectcards()
@@ -43,6 +39,11 @@ function _draw()
 end
 
 function newgame()
+	selectedarea=nil
+	hoveredarea="stock"
+	hoveredxindex=1
+	hoveredyindex=1
+
 	stock={}
 	stock.x=2
 	stock.y=topy
@@ -199,6 +200,7 @@ function selectcards()
 	  selectedyindex=hoveredyindex
 	  selectedarea=hoveredarea
 	  for i=selectedyindex,#tableaus[selectedxindex].cards do
+	   --todo fix error: attempt to index field '?' a nil value
 	   tableaus[selectedxindex].cards[i].isselected=true
 	  end
 	 elseif hoveredarea=="waste" then
@@ -294,9 +296,8 @@ function drawcard(card,x,y,isshadowed)
 	
 	 --card background
 	 reflectcard(14,x,y)
-	 
 	 spr(21+2*(card.suit-1),x,y+1,2,2)
-  spr(card.rank,x+1,y+1)
+	 spr(card.rank,x+1,y+1)
 	else --just card back
 	 spr(46,x,y,2,1)
 	 spr(46,x,y+8,2,1,true,true)
@@ -354,7 +355,9 @@ end
 -->8
 --interaction
 function changearea()
-	if hoveredarea=="stock" then
+ if btnp(❎) and selectedarea~=nil then
+  deselectcards()
+	elseif hoveredarea=="stock" then
 	 stock_input()
 	elseif hoveredarea=="waste" then
 	 waste_input();
@@ -386,11 +389,7 @@ function waste_input()
    selectcards()
   end
  elseif btnp(❎) then
-  if selectedarea=="waste" then
-   deselectcards()
-  else
-   checkmovetofoundation(true)
-  end
+  checkmovetofoundation(true)
  end
 end
 
@@ -414,11 +413,7 @@ function reserves_input()
  elseif btnp(🅾️) then
   reserves_move()
 	elseif btnp(❎) then
-	 if selectedarea~=nil then
-	  deselectcards()
-	 else
-	 	checkmovetofoundation()
-	 end
+ 	checkmovetofoundation()
  end
 end
 
@@ -640,8 +635,8 @@ __gfx__
 0000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000
 0000000000000000000000000000000000000000fffffffff8fffffffffffffff0fffffffffffff8fff8fffffffffffff0ffffff000000000000000000000000
 0000000000000000000000000000000000000000ffffffff888fffffffffffff000fffffffffff888f888fffffffffff000fffff000000000000000000000000
-0000000000000000000000000000000000000000fffffff88888ffffffffffff000ffffffffff888888888fffffffff00000ffff000000000000000000000000
-0000000000000000000000000000000000000000ffffff8888888fffffffff00f0f00ffffffff888888888ffffffff0000000fff00000000fff11c111c111fff
+0000000000000000000000000000000000000000fffffff88888ffffffffffff000ffffffffff888888e88fffffffff00000ffff000000000000000000000000
+0000000000000000000000000000000000000000ffffff8888888fffffffff00f0f00ffffffff8888888e8ffffffff0000000fff00000000fff11c111c111fff
 0000000000000000000000000000000000000000fffff888888888fffffff000000000fffffff888888888fffffff000000000ff00000000ff11c111c111c1ff
 0000000000000000000000000000000000000000ffffff8888888fffffffff00f0f00fffffffff8888888fffffffff0000000fff00000000f11c111c111c111f
 0000000000000000000000000000000000000000fffffff88888fffffffffffff0fffffffffffff88888fffffffffffff0ffffff00000000f1c111c111c111cf
