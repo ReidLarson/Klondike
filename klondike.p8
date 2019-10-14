@@ -280,7 +280,7 @@ function drawcard(card,x,y,isshadowed)
   palt(15,true)
  end
 	if card.isfaceup then
-		local suitspr=64+2*(card.suit-1)
+		local suitspr=64+2*(card.suit-1)+(flr(time()*8)%4)*32
 		--(flr(tick/2*8))
 
 	 --card background
